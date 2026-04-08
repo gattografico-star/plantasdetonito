@@ -37,15 +37,27 @@
     import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
     // --- Firebase Setup ---
-    // NOTA PARA GITHUB PAGES: Reemplaza esto con la configuración de tu proyecto Firebase
-    const defaultFirebaseConfig = {
-      apiKey: "TU_API_KEY_DE_FIREBASE",
-      authDomain: "tu-proyecto.firebaseapp.com",
-      projectId: "tu-proyecto",
-      storageBucket: "tu-proyecto.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:12345:web:abcde"
-    };
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAv5Euw8RS5hOLPcWFK3oRrO3ZroKg4QEs",
+  authDomain: "plantasdetonito.firebaseapp.com",
+  projectId: "plantasdetonito",
+  storageBucket: "plantasdetonito.firebasestorage.app",
+  messagingSenderId: "238588052762",
+  appId: "1:238588052762:web:11abbd4c68d36901e018a3",
+  measurementId: "G-VBH91LY2XZ"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
     
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
     const app = initializeApp(firebaseConfig);
