@@ -1,962 +1,520 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera, BookImage, MessageCircle, ShoppingCart, Plus, Image as ImageIcon, Send, Droplets, Info, Check, Trash2, X, Leaf, LogIn, UserPlus, AlignLeft, Lock, Save, Calendar, Database, ChevronDown, ChevronUp } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
-
-// --- Firebase Setup ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'vivero-tonito-app';
-
-// --- Gemini API Setup ---
-const apiKey = ""; // Provided by environment
-
-export default function ViveroApp() {
-  const [user, setUser] = useState(null);
-  const [userEmail, setUserEmail] = useState(localStorage.getItem('vivero_user_email') || null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('album');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>El vivero de Toñito</title>
   
-  // Data States
-  const [plants, setPlants] = useState([]);
-  const [shoppingList, setShoppingList] = useState([]);
-  const [agendaItems, setAgendaItems] = useState([]);
-  const [customAppName, setCustomAppName] = useState('El vivero de Toñito');
-  const [customAppIcon, setCustomAppIcon] = useState(null);
-  const [adminPin, setAdminPin] = useState('459580');
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   
-  // UI States
-  const [selectedPlant, setSelectedPlant] = useState(null);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  <!-- Babel para compilar React/JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  // --- Auth Listener ---
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("Auth error:", err);
-      }
+  <!-- Estilos personalizados -->
+  <style>
+    @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
+    .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    body { -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-stone-100 text-gray-900 font-sans">
+  
+  <!-- Contenedor principal de React -->
+  <div id="root"></div>
+
+  <!-- Código de la App -->
+  <script type="text/babel" data-type="module">
+    // --- IMPORTACIONES VIA CDN (ES Modules) ---
+    import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
+    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+    import { Camera, BookImage, MessageCircle, ShoppingCart, Plus, Image as ImageIcon, Send, Droplets, Info, Check, Trash2, X, Leaf, LogIn, UserPlus, AlignLeft, Lock, Save, Calendar, Database, ChevronDown, ChevronUp } from 'https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // --- Firebase Setup ---
+    // NOTA PARA GITHUB PAGES: Reemplaza esto con la configuración de tu proyecto Firebase
+    const defaultFirebaseConfig = {
+      apiKey: "TU_API_KEY_DE_FIREBASE",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      projectId: "tu-proyecto",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:12345:web:abcde"
     };
-    initAuth();
+    
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'vivero-tonito-app';
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    // --- Gemini API Setup ---
+    // NOTA PARA GITHUB PAGES: Pon tu API Key aquí
+    const apiKey = typeof __gemini_api_key !== 'undefined' ? __gemini_api_key : "TU_API_KEY_DE_GEMINI"; 
 
-  // --- Global Settings & App Name Sync ---
-  useEffect(() => {
-    if (!user || !userEmail) return;
+    function ViveroApp() {
+      const [user, setUser] = useState(null);
+      const [userEmail, setUserEmail] = useState(localStorage.getItem('vivero_user_email') || null);
+      const [authLoading, setAuthLoading] = useState(true);
+      const [activeTab, setActiveTab] = useState('album');
+      
+      // Data States
+      const [plants, setPlants] = useState([]);
+      const [shoppingList, setShoppingList] = useState([]);
+      const [agendaItems, setAgendaItems] = useState([]);
+      const [customAppName, setCustomAppName] = useState('El vivero de Toñito');
+      const [customAppIcon, setCustomAppIcon] = useState(null);
+      const [adminPin, setAdminPin] = useState('459580');
+      
+      // UI States
+      const [selectedPlant, setSelectedPlant] = useState(null);
+      const [showPinModal, setShowPinModal] = useState(false);
+      const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-    // 1. Sync User Profile (Global)
-    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_users', user.uid);
-    const unsubUser = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setCustomAppName(docSnap.data().customAppName || 'El vivero de Toñito');
-        setCustomAppIcon(docSnap.data().customAppIcon || null);
-      } else {
-        // Register new user globally if not exists
-        setDoc(userDocRef, { email: userEmail, customAppName: 'El vivero de Toñito', joinedAt: Date.now() }, { merge: true });
-      }
-    }, (err) => console.error("Error perfil global:", err));
-
-    // 2. Sync Admin Config
-    const adminRef = doc(db, 'artifacts', appId, 'public', 'data', 'admin_config', 'settings');
-    const unsubAdmin = onSnapshot(adminRef, (docSnap) => {
-      if (docSnap.exists() && docSnap.data().pin) {
-        setAdminPin(docSnap.data().pin);
-      } else {
-        setDoc(adminRef, { pin: '459580' }, { merge: true });
-      }
-    }, (err) => console.error("Error admin config:", err));
-
-    return () => {
-      unsubUser();
-      unsubAdmin();
-    };
-  }, [user, userEmail]);
-
-  // --- Data Fetching (Private Data) ---
-  useEffect(() => {
-    if (!user || !userEmail) return;
-
-    const plantsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'plants');
-    const shoppingRef = collection(db, 'artifacts', appId, 'users', user.uid, 'shopping');
-    const agendaRef = collection(db, 'artifacts', appId, 'users', user.uid, 'agenda');
-
-    const unsubPlants = onSnapshot(plantsRef, (snapshot) => {
-      const plantsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      plantsData.sort((a, b) => b.createdAt - a.createdAt);
-      setPlants(plantsData);
-    }, (err) => console.error("Error cargando plantas:", err));
-
-    const unsubShopping = onSnapshot(shoppingRef, (snapshot) => {
-      const shopData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      shopData.sort((a, b) => b.createdAt - a.createdAt);
-      setShoppingList(shopData);
-    }, (err) => console.error("Error cargando compras:", err));
-
-    const unsubAgenda = onSnapshot(agendaRef, (snapshot) => {
-      const agendaData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      agendaData.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setAgendaItems(agendaData);
-    }, (err) => console.error("Error cargando agenda:", err));
-
-    return () => {
-      unsubPlants();
-      unsubShopping();
-      unsubAgenda();
-    };
-  }, [user, userEmail]);
-
-  const compressImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 800;
-          const MAX_HEIGHT = 800;
-          let width = img.width;
-          let height = img.height;
-          if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-          else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+      // --- Auth Listener ---
+      useEffect(() => {
+        const initAuth = async () => {
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              // En GitHub Pages entrará aquí para login anónimo
+              await signInAnonymously(auth);
+            }
+          } catch (err) {
+            console.error("Auth error:", err);
+          }
         };
-        img.src = event.target.result;
+        initAuth();
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setAuthLoading(false);
+        });
+        return () => unsubscribe();
+      }, []);
+
+      // --- Global Settings & App Name Sync ---
+      useEffect(() => {
+        if (!user || !userEmail) return;
+
+        const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_users', user.uid);
+        const unsubUser = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setCustomAppName(docSnap.data().customAppName || 'El vivero de Toñito');
+            setCustomAppIcon(docSnap.data().customAppIcon || null);
+          } else {
+            setDoc(userDocRef, { email: userEmail, customAppName: 'El vivero de Toñito', joinedAt: Date.now() }, { merge: true });
+          }
+        }, (err) => console.error("Error perfil global:", err));
+
+        const adminRef = doc(db, 'artifacts', appId, 'public', 'data', 'admin_config', 'settings');
+        const unsubAdmin = onSnapshot(adminRef, (docSnap) => {
+          if (docSnap.exists() && docSnap.data().pin) {
+            setAdminPin(docSnap.data().pin);
+          } else {
+            setDoc(adminRef, { pin: '459580' }, { merge: true });
+          }
+        }, (err) => console.error("Error admin config:", err));
+
+        return () => { unsubUser(); unsubAdmin(); };
+      }, [user, userEmail]);
+
+      // --- Data Fetching (Private Data) ---
+      useEffect(() => {
+        if (!user || !userEmail) return;
+
+        const plantsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'plants');
+        const shoppingRef = collection(db, 'artifacts', appId, 'users', user.uid, 'shopping');
+        const agendaRef = collection(db, 'artifacts', appId, 'users', user.uid, 'agenda');
+
+        const unsubPlants = onSnapshot(plantsRef, (snapshot) => {
+          const plantsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          plantsData.sort((a, b) => b.createdAt - a.createdAt);
+          setPlants(plantsData);
+        }, (err) => console.error("Error cargando plantas:", err));
+
+        const unsubShopping = onSnapshot(shoppingRef, (snapshot) => {
+          const shopData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          shopData.sort((a, b) => b.createdAt - a.createdAt);
+          setShoppingList(shopData);
+        }, (err) => console.error("Error cargando compras:", err));
+
+        const unsubAgenda = onSnapshot(agendaRef, (snapshot) => {
+          const agendaData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          agendaData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          setAgendaItems(agendaData);
+        }, (err) => console.error("Error cargando agenda:", err));
+
+        return () => { unsubPlants(); unsubShopping(); unsubAgenda(); };
+      }, [user, userEmail]);
+
+      const compressImage = (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 800;
+              const MAX_HEIGHT = 800;
+              let width = img.width;
+              let height = img.height;
+              if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+              else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+              canvas.width = width; canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
       };
-      reader.readAsDataURL(file);
-    });
-  };
 
-  const needsWatering = (lastWatered, frequencyDays) => {
-    if (!lastWatered || !frequencyDays) return false;
-    const nextDate = new Date(lastWatered);
-    nextDate.setDate(nextDate.getDate() + parseInt(frequencyDays));
-    return new Date() >= nextDate;
-  };
+      const needsWatering = (lastWatered, frequencyDays) => {
+        if (!lastWatered || !frequencyDays) return false;
+        const nextDate = new Date(lastWatered);
+        nextDate.setDate(nextDate.getDate() + parseInt(frequencyDays));
+        return new Date() >= nextDate;
+      };
 
-  const handleLogout = () => {
-    localStorage.removeItem('vivero_user_email');
-    setUserEmail(null);
-  };
+      const handleLogout = () => {
+        localStorage.removeItem('vivero_user_email');
+        setUserEmail(null);
+      };
 
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-green-50 text-green-800 font-bold">Cargando...</div>;
-  }
+      if (authLoading) {
+        return <div className="min-h-screen flex items-center justify-center bg-green-50 text-green-800 font-bold">Cargando...</div>;
+      }
 
-  if (!user || !userEmail) {
-    return <LoginScreen onLogin={(email) => {
-      localStorage.setItem('vivero_user_email', email);
-      setUserEmail(email);
-    }} />;
-  }
+      if (!user || !userEmail) {
+        return <LoginScreen onLogin={(email) => {
+          localStorage.setItem('vivero_user_email', email);
+          setUserEmail(email);
+        }} />;
+      }
 
-  return (
-    <div className="min-h-screen bg-stone-100 flex flex-col font-sans pb-20 relative">
-      {/* Header */}
-      <header className="bg-green-700 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
-        <div className="flex items-center gap-2 overflow-hidden">
-          {customAppIcon ? (
-            <img src={customAppIcon} alt="Icon" className="w-8 h-8 object-cover shrink-0 rounded-md bg-white/20 p-0.5" />
-          ) : (
-            <Leaf className="w-6 h-6 text-green-300 shrink-0" />
-          )}
-          <h1 className="text-xl font-bold truncate">{customAppName}</h1>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button onClick={() => setShowPinModal(true)} className="p-1.5 bg-green-800 rounded-full active:bg-green-900 shadow-inner">
-            <Lock className="w-4 h-4 text-green-200" />
-          </button>
-          <button onClick={handleLogout} className="text-xs font-bold bg-green-800 px-3 py-1.5 rounded-lg active:bg-green-900 shadow-inner">
-            Salir
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'album' && <AlbumView plants={plants} setSelectedPlant={setSelectedPlant} needsWatering={needsWatering} user={user} db={db} appId={appId} />}
-        {activeTab === 'agenda' && <AgendaView agendaItems={agendaItems} user={user} db={db} appId={appId} />}
-        {activeTab === 'chat' && <ChatView plants={plants} shoppingList={shoppingList} agendaItems={agendaItems} user={user} />}
-        {activeTab === 'shopping' && <ShoppingView shoppingList={shoppingList} user={user} />}
-        {activeTab === 'add' && <AddPlantView user={user} plants={plants} compressImage={compressImage} />}
-      </main>
-
-      {/* Detail Modal */}
-      {selectedPlant && (
-        <PlantDetailModal plant={selectedPlant} onClose={() => setSelectedPlant(null)} user={user} db={db} appId={appId} />
-      )}
-
-      {/* Admin Modals */}
-      {showPinModal && (
-        <AdminPinModal 
-          correctPin={adminPin} 
-          onClose={() => setShowPinModal(false)} 
-          onSuccess={() => { setShowPinModal(false); setShowAdminPanel(true); }} 
-        />
-      )}
-      
-      {showAdminPanel && (
-        <AdminPanel 
-          onClose={() => setShowAdminPanel(false)} 
-          db={db} appId={appId} 
-          currentPin={adminPin} 
-          compressImage={compressImage}
-        />
-      )}
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 pb-safe z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <NavButton icon={<BookImage />} label="Álbum" isActive={activeTab === 'album'} onClick={() => setActiveTab('album')} />
-        <NavButton icon={<Calendar />} label="Agenda" isActive={activeTab === 'agenda'} onClick={() => setActiveTab('agenda')} />
-        <NavButton icon={<MessageCircle />} label="Chat IA" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
-        <NavButton icon={<ShoppingCart />} label="Compras" isActive={activeTab === 'shopping'} onClick={() => setActiveTab('shopping')} />
-        <NavButton icon={<Camera />} label="Guardar" isActive={activeTab === 'add'} onClick={() => setActiveTab('add')} />
-      </nav>
-    </div>
-  );
-}
-
-// --- ADMIN COMPONENTS ---
-
-function AdminPinModal({ correctPin, onClose, onSuccess }) {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (pin === correctPin) {
-      onSuccess();
-    } else {
-      setError(true);
-      setPin('');
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-xl animate-scale-up">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-lg flex items-center gap-2"><Lock className="w-5 h-5 text-gray-500"/> Zona Privada</h3>
-          <button onClick={onClose} className="p-1 bg-gray-100 rounded-full active:bg-gray-200"><X className="w-5 h-5"/></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input 
-            type="password" 
-            placeholder="Ingresa clave (PIN)" 
-            value={pin}
-            onChange={e => setPin(e.target.value)}
-            className={`w-full p-3 text-center tracking-widest font-bold text-xl rounded-xl border ${error ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`}
-            autoFocus
-          />
-          {error && <p className="text-red-500 text-xs text-center font-bold">Clave incorrecta.</p>}
-          <button type="submit" className="w-full bg-gray-800 text-white font-bold p-3 rounded-xl active:bg-black">
-            Acceder
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function AdminPanel({ onClose, db, appId, currentPin, compressImage }) {
-  const [adminTab, setAdminTab] = useState('users'); // 'users', 'vault'
-  const [users, setUsers] = useState([]);
-  const [newPin, setNewPin] = useState('');
-  const [savingMsg, setSavingMsg] = useState('');
-
-  // Vault states
-  const [vaultItems, setVaultItems] = useState([]);
-  const [vaultTitle, setVaultTitle] = useState('');
-  const [vaultContent, setVaultContent] = useState('');
-  const [expandedVaultId, setExpandedVaultId] = useState(null);
-
-  useEffect(() => {
-    // Fetch Users
-    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'global_users');
-    const unsubUsers = onSnapshot(usersRef, (snap) => {
-      setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() })));
-    }, (err) => console.error("Error Admin Users:", err));
-
-    // Fetch Vault Items
-    const vaultRef = collection(db, 'artifacts', appId, 'public', 'data', 'admin_vault');
-    const unsubVault = onSnapshot(vaultRef, (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      items.sort((a, b) => b.createdAt - a.createdAt);
-      setVaultItems(items);
-    }, (err) => console.error("Error Vault:", err));
-
-    return () => { unsubUsers(); unsubVault(); };
-  }, [db, appId]);
-
-  const handleUpdateName = async (uid, newName) => {
-    try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'global_users', uid), {
-        customAppName: newName
-      });
-      setSavingMsg('Nombre actualizado!');
-      setTimeout(() => setSavingMsg(''), 2000);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleIconChange = async (uid, file) => {
-    if (!file) return;
-    const base64 = await compressImage(file);
-    try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'global_users', uid), {
-        customAppIcon: base64
-      });
-      setSavingMsg('Ícono actualizado!');
-      setTimeout(() => setSavingMsg(''), 2000);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleUpdatePin = async () => {
-    if (!newPin || newPin.length < 4) return;
-    try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admin_config', 'settings'), {
-        pin: newPin
-      });
-      setNewPin('');
-      setSavingMsg('Clave cambiada!');
-      setTimeout(() => setSavingMsg(''), 2000);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleAddVaultItem = async () => {
-    if (!vaultTitle.trim() || !vaultContent.trim()) return;
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_vault'), {
-        title: vaultTitle.trim(),
-        content: vaultContent.trim(),
-        createdAt: Date.now()
-      });
-      setVaultTitle('');
-      setVaultContent('');
-      setSavingMsg('¡Guardado en la bóveda!');
-      setTimeout(() => setSavingMsg(''), 2000);
-    } catch (err) { console.error(err); }
-  };
-
-  const handleDeleteVaultItem = async (id) => {
-    try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admin_vault', id)); } 
-    catch (err) { console.error(err); }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-gray-100 z-50 flex flex-col overflow-hidden animate-slide-up">
-      <header className="bg-gray-900 text-white shadow-md flex flex-col">
-        <div className="p-4 flex justify-between items-center">
-          <h2 className="font-bold flex items-center gap-2"><Lock className="w-5 h-5"/> Panel de Administrador</h2>
-          <button onClick={onClose} className="p-2 bg-gray-800 rounded-full active:bg-gray-700"><X className="w-5 h-5"/></button>
-        </div>
-        <div className="flex bg-gray-800 text-sm font-bold">
-          <button onClick={() => setAdminTab('users')} className={`flex-1 py-3 transition-colors ${adminTab === 'users' ? 'text-white border-b-4 border-green-500' : 'text-gray-400 hover:text-gray-200'}`}>Usuarios</button>
-          <button onClick={() => setAdminTab('vault')} className={`flex-1 py-3 transition-colors ${adminTab === 'vault' ? 'text-white border-b-4 border-blue-500' : 'text-gray-400 hover:text-gray-200'}`}>Bóveda (Vault)</button>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {savingMsg && <div className="bg-green-500 text-white text-center p-2 rounded-xl font-bold sticky top-0 z-10 shadow-md">{savingMsg}</div>}
-        
-        {adminTab === 'users' && (
-          <>
-            {/* Cambiar PIN */}
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="font-bold text-gray-800 mb-3 text-sm">Cambiar Clave Maestra (PIN)</h3>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder={`Actual: ${currentPin}`} 
-                  value={newPin} 
-                  onChange={e => setNewPin(e.target.value)} 
-                  className="flex-1 p-3 rounded-xl border border-gray-200 outline-none focus:border-gray-500 bg-gray-50 font-bold tracking-wider"
-                />
-                <button onClick={handleUpdatePin} className="bg-gray-800 text-white px-4 rounded-xl font-bold active:bg-black"><Save className="w-5 h-5"/></button>
-              </div>
-            </div>
-
-            {/* Lista de Usuarios */}
-            <div>
-              <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><UserPlus className="w-5 h-5 text-gray-600"/> Usuarios Registrados</h3>
-              <div className="space-y-3">
-                {users.map(u => (
-                  <div key={u.uid} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-                    <p className="font-bold text-gray-700 text-sm mb-2">Email: <span className="text-blue-600 font-normal">{u.email}</span></p>
-                    <label className="text-xs font-bold text-gray-500">Ícono y Nombre de la App:</label>
-                    <div className="flex gap-2 mt-1 items-center">
-                      <label className="cursor-pointer shrink-0">
-                        {u.customAppIcon ? (
-                          <img src={u.customAppIcon} alt="app-icon" className="w-10 h-10 object-cover rounded-lg border border-gray-200 shadow-sm" />
-                        ) : (
-                          <div className="w-10 h-10 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
-                            <ImageIcon className="w-5 h-5 text-gray-400" />
-                          </div>
-                        )}
-                        <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={(e) => handleIconChange(u.uid, e.target.files[0])} />
-                      </label>
-                      <input 
-                        type="text" 
-                        defaultValue={u.customAppName}
-                        onBlur={(e) => { if(e.target.value !== u.customAppName) handleUpdateName(u.uid, e.target.value) }}
-                        className="flex-1 p-2 rounded-lg border border-gray-200 outline-none focus:border-green-500 bg-gray-50 text-sm h-10"
-                      />
-                      <button onClick={(e) => handleUpdateName(u.uid, e.currentTarget.previousElementSibling.value)} className="bg-green-600 text-white px-3 rounded-lg active:bg-green-700 h-10">
-                        <Check className="w-4 h-4"/>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {users.length === 0 && <p className="text-center text-gray-500 text-sm">No hay usuarios aún.</p>}
-              </div>
-            </div>
-          </>
-        )}
-
-        {adminTab === 'vault' && (
-          <>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-3">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2"><Database className="w-5 h-5 text-blue-600"/> Nueva Entrada (New Entry)</h3>
-              <input 
-                type="text" 
-                placeholder="Título (Title)" 
-                value={vaultTitle} 
-                onChange={e => setVaultTitle(e.target.value)} 
-                className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-500 bg-gray-50 font-bold text-sm" 
-              />
-              <textarea 
-                placeholder="Pega tu texto, código o datos extensos aquí..." 
-                value={vaultContent} 
-                onChange={e => setVaultContent(e.target.value)} 
-                className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-500 bg-gray-50 h-32 font-mono text-sm resize-y" 
-              />
-              <button 
-                onClick={handleAddVaultItem} 
-                disabled={!vaultTitle || !vaultContent} 
-                className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl active:bg-blue-700 disabled:opacity-50 shadow-md"
-              >
-                Guardar en Bóveda
-              </button>
-            </div>
-
-            <div className="space-y-3 pb-6">
-              <h3 className="font-bold text-gray-800 ml-1">Documentos Resguardados</h3>
-              {vaultItems.map(item => (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div 
-                    className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => setExpandedVaultId(expandedVaultId === item.id ? null : item.id)}
-                  >
-                    <h4 className="font-bold text-gray-800 truncate pr-4">{item.title}</h4>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteVaultItem(item.id); }} 
-                        className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4"/>
-                      </button>
-                      {expandedVaultId === item.id ? <ChevronUp className="w-5 h-5 text-gray-500"/> : <ChevronDown className="w-5 h-5 text-gray-500"/>}
-                    </div>
-                  </div>
-                  {expandedVaultId === item.id && (
-                    <div className="p-4 border-t border-gray-100 bg-gray-50">
-                      <pre className="whitespace-pre-wrap font-mono text-xs text-gray-700 bg-white p-3 rounded-xl border border-gray-200 overflow-x-auto max-h-96 overflow-y-auto">
-                        {item.content}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {vaultItems.length === 0 && <p className="text-center text-gray-400 text-sm mt-4">La bóveda está vacía.</p>}
-            </div>
-          </>
-        )}
-
-      </div>
-    </div>
-  );
-}
-
-
-// --- LOGIN SCREEN ---
-function LoginScreen({ onLogin }) {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email.trim()) { setError('Por favor, ingresa un correo válido.'); return; }
-    setError(''); setLoading(true);
-    setTimeout(() => { onLogin(email); setLoading(false); }, 800);
-  };
-
-  return (
-    <div className="min-h-screen bg-green-50 flex flex-col items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-green-100 flex flex-col items-center">
-        <div className="bg-green-100 p-4 rounded-full mb-4"><Leaf className="w-12 h-12 text-green-600" /></div>
-        <h1 className="text-2xl font-bold text-gray-800 text-center mb-1">El vivero de Toñito</h1>
-        <p className="text-sm text-gray-500 mb-8 text-center">Ingresa tu correo para empezar</p>
-        {error && <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4 text-center border border-red-100">{error}</div>}
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
-          <div>
-            <label className="text-xs font-bold text-gray-600 ml-1">Correo Electrónico</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 text-center font-medium shadow-inner" placeholder="tu@correo.com" required />
-          </div>
-          <button type="submit" disabled={loading || !email} className="w-full bg-green-600 text-white p-3.5 rounded-xl font-bold mt-4 active:bg-green-700 flex justify-center items-center gap-2 disabled:opacity-70 shadow-md">
-            {loading ? 'Cargando...' : <><LogIn className="w-5 h-5"/> Entrar</>}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// --- VIEWS ---
-
-function AlbumView({ plants, setSelectedPlant, needsWatering, user, db, appId }) {
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
-  const handleDelete = async (plantId) => {
-    try {
-      await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plantId));
-      setConfirmDeleteId(null);
-    } catch (err) { console.error("Error eliminando:", err); }
-  };
-
-  if (plants.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 mt-20 text-center">
-        <BookImage className="w-16 h-16 mb-4 text-green-300" />
-        <p className="text-lg">Tu álbum está vacío.</p>
-        <p className="text-sm mt-2">Ve a 'Guardar' para añadir tu primera planta.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {plants.map(plant => {
-        const isThirsty = needsWatering(plant.lastWatered, plant.wateringDays);
-        const isDeleting = confirmDeleteId === plant.id;
-
-        return (
-          <div key={plant.id} className="bg-white rounded-xl shadow-sm overflow-hidden relative border border-gray-100 flex flex-col">
-            
-            <button 
-              onClick={() => setConfirmDeleteId(isDeleting ? null : plant.id)}
-              className="absolute top-2 left-2 z-10 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-red-500 shadow-sm active:bg-red-100"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-
-            {isThirsty && !isDeleting && (
-              <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center shadow-md z-10 animate-pulse">
-                <Droplets className="w-3 h-3 mr-1" /> ¡Agua!
-              </div>
-            )}
-
-            {isDeleting && (
-              <div className="absolute inset-0 bg-red-600/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-white p-2 text-center">
-                <p className="font-bold text-sm mb-2">¿Eliminar?</p>
-                <div className="flex gap-2 w-full">
-                  <button onClick={() => handleDelete(plant.id)} className="flex-1 bg-white text-red-600 text-xs font-bold py-2 rounded-lg active:bg-red-50">Sí</button>
-                  <button onClick={() => setConfirmDeleteId(null)} className="flex-1 bg-red-800 text-white text-xs font-bold py-2 rounded-lg active:bg-red-900">No</button>
-                </div>
-              </div>
-            )}
-
-            <div className="h-32 bg-gray-200 w-full relative">
-              {plant.photos && plant.photos[0] ? (
-                <img src={plant.photos[0].url} alt={plant.nickname} className="w-full h-full object-cover" />
+      return (
+        <div className="min-h-screen bg-stone-100 flex flex-col font-sans pb-20 relative">
+          <header className="bg-green-700 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
+            <div className="flex items-center gap-2 overflow-hidden">
+              {customAppIcon ? (
+                <img src={customAppIcon} alt="Icon" className="w-8 h-8 object-cover shrink-0 rounded-md bg-white/20 p-0.5" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Sin foto</div>
+                <Leaf className="w-6 h-6 text-green-300 shrink-0" />
               )}
+              <h1 className="text-xl font-bold truncate">{customAppName}</h1>
             </div>
-            <div className="p-3 flex-1 flex flex-col">
-              <h3 className="font-bold text-gray-800 text-sm truncate">{plant.nickname}</h3>
-              <p className="text-[10px] text-gray-500 italic truncate mb-2">{plant.scientificName}</p>
-              <button 
-                onClick={() => setSelectedPlant(plant)}
-                className="mt-auto w-full bg-green-50 text-green-700 py-1.5 rounded-lg text-xs font-bold flex justify-center items-center gap-1 active:bg-green-100 transition-colors border border-green-200"
-              >
-                <Info className="w-3 h-3" /> Info
+            <div className="flex items-center gap-3 shrink-0">
+              <button onClick={() => setShowPinModal(true)} className="p-1.5 bg-green-800 rounded-full active:bg-green-900 shadow-inner">
+                <Lock className="w-4 h-4 text-green-200" />
+              </button>
+              <button onClick={handleLogout} className="text-xs font-bold bg-green-800 px-3 py-1.5 rounded-lg active:bg-green-900 shadow-inner">
+                Salir
               </button>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+          </header>
 
-function AgendaView({ agendaItems, user, db, appId }) {
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
+          <main className="flex-1 overflow-y-auto p-4">
+            {activeTab === 'album' && <AlbumView plants={plants} setSelectedPlant={setSelectedPlant} needsWatering={needsWatering} user={user} db={db} appId={appId} />}
+            {activeTab === 'agenda' && <AgendaView agendaItems={agendaItems} user={user} db={db} appId={appId} />}
+            {activeTab === 'chat' && <ChatView plants={plants} shoppingList={shoppingList} agendaItems={agendaItems} user={user} />}
+            {activeTab === 'shopping' && <ShoppingView shoppingList={shoppingList} user={user} />}
+            {activeTab === 'add' && <AddPlantView user={user} plants={plants} compressImage={compressImage} />}
+          </main>
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    if (!note.trim() || !date || !user) return;
-    setIsAdding(true);
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'agenda'), { 
-        note: note.trim(), 
-        date: date, 
-        createdAt: Date.now() 
-      });
-      setNote(''); 
-      setDate('');
-    } catch (err) { console.error(err); } finally { setIsAdding(false); }
-  };
+          {selectedPlant && (
+            <PlantDetailModal plant={selectedPlant} onClose={() => setSelectedPlant(null)} user={user} db={db} appId={appId} />
+          )}
 
-  const deleteItem = async (id) => {
-    try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'agenda', id)); } catch (err) { console.error(err); }
-  };
+          {showPinModal && (
+            <AdminPinModal correctPin={adminPin} onClose={() => setShowPinModal(false)} onSuccess={() => { setShowPinModal(false); setShowAdminPanel(true); }} />
+          )}
+          
+          {showAdminPanel && (
+            <AdminPanel onClose={() => setShowAdminPanel(false)} db={db} appId={appId} currentPin={adminPin} compressImage={compressImage} />
+          )}
 
-  return (
-    <div className="max-w-md mx-auto">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Calendar className="w-6 h-6 text-green-600" /> Agenda</h2>
-      <form onSubmit={handleAdd} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3">
-        <div>
-           <label className="text-xs font-bold text-gray-500 ml-1">Fecha</label>
-           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium text-gray-700" required />
+          <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-2 pb-safe z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <NavButton icon={<BookImage />} label="Álbum" isActive={activeTab === 'album'} onClick={() => setActiveTab('album')} />
+            <NavButton icon={<Calendar />} label="Agenda" isActive={activeTab === 'agenda'} onClick={() => setActiveTab('agenda')} />
+            <NavButton icon={<MessageCircle />} label="Chat IA" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
+            <NavButton icon={<ShoppingCart />} label="Compras" isActive={activeTab === 'shopping'} onClick={() => setActiveTab('shopping')} />
+            <NavButton icon={<Camera />} label="Guardar" isActive={activeTab === 'add'} onClick={() => setActiveTab('add')} />
+          </nav>
         </div>
-        <div>
-           <label className="text-xs font-bold text-gray-500 ml-1">Nota o Riego</label>
-           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ej. Regar el helecho..." className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" required />
-        </div>
-        <button type="submit" disabled={isAdding || !note || !date} className="w-full bg-green-600 text-white p-3 rounded-xl shadow-md active:bg-green-700 disabled:opacity-50 font-bold">
-          Añadir
-        </button>
-      </form>
+      );
+    }
 
-      {agendaItems.length === 0 ? (
-        <div className="text-center text-gray-400 mt-10 bg-white p-6 rounded-2xl border border-dashed border-gray-300">
-           <Calendar className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-           <p className="font-medium">Agenda vacía.</p>
-           <p className="text-xs">Añade recordatorios de riego o notas.</p>
-        </div>
-      ) : (
-        <ul className="space-y-3">
-          {agendaItems.map(item => (
-            <li key={item.id} className="flex items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <div className="bg-green-100 text-green-800 p-2 rounded-lg text-center min-w-[70px] mr-3">
-                <p className="text-xs font-bold">{new Date(item.date + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}</p>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-800 text-sm">{item.note}</p>
-              </div>
-              <button onClick={() => deleteItem(item.id)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg active:bg-red-100 transition-colors shrink-0 ml-2"><Trash2 className="w-5 h-5" /></button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
+    // --- ADMIN COMPONENTS ---
+    function AdminPinModal({ correctPin, onClose, onSuccess }) {
+      const [pin, setPin] = useState('');
+      const [error, setError] = useState(false);
 
-function ChatView({ plants, shoppingList, agendaItems, user }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
-  
-  useEffect(() => {
-    if (!user) return;
-    const chatRef = collection(db, 'artifacts', appId, 'users', user.uid, 'chat');
-    const unsubChat = onSnapshot(chatRef, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      msgs.sort((a, b) => a.createdAt - b.createdAt);
-      setMessages(msgs);
-      if (msgs.length === 0) generarSaludoInicial();
-    }, (err) => console.error("Error cargando chat:", err));
-    return () => unsubChat();
-  }, [user]);
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (pin === correctPin) onSuccess();
+        else { setError(true); setPin(''); }
+      };
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  useEffect(() => { scrollToBottom(); }, [messages]);
-
-  const guardarMensajeEnBD = async (role, text) => {
-    try { await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'chat'), { role: role, text: text, createdAt: Date.now() }); } 
-    catch (err) { console.error("Error guardando mensaje:", err); }
-  };
-
-  const generarSaludoInicial = async () => {
-    const saludo = "¡Hello (Hola)! Soy tu IA experta en plantas. Como eres un usuario nuevo para mí, ¿me podrías decir tu nombre (name) para recordarlo y qué plantitas tienes?";
-    await guardarMensajeEnBD('model', saludo);
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() || isTyping || !user) return;
-    const userText = input.trim();
-    setInput(''); setIsTyping(true);
-    await guardarMensajeEnBD('user', userText);
-
-    try {
-      const contextPlants = plants.map(p => ({ apodo: p.nickname, nombre: p.scientificName, riegoCada: p.wateringDays + ' dias' }));
-      const contextShopPending = shoppingList.filter(s => !s.completed).map(s => `${s.name} (Detalles: ${s.details || 'Ninguno'})`);
-      const contextShopBought = shoppingList.filter(s => s.completed).map(s => s.name);
-      const contextAgenda = agendaItems.map(a => `${a.date}: ${a.note}`);
-      
-      const chatHistoryForAPI = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
-      chatHistoryForAPI.push({ role: 'user', parts: [{ text: userText }] });
-
-      const systemInstruction = `
-        Eres el mejor asesor de plantas del mundo. El usuario es Anthony Stocello, organizador de bodas, diseñador gráfico, y ama las plantas.
-        REGLA DE ORO: Respuestas PRECISAS y CORTAS (precise and short). Si no sabes su nombre, pregúntalo.
-        REGLA DE ESTILO: Usa un poco de "Spanglish" (espanglish), utilizando palabras/oraciones en inglés, poniendo su traducción al español entre paréntesis inmediatamente después. Ejemplo: "Necesitas más water (agua)".
-        CONTEXTO DE LA APP: Plantas: ${JSON.stringify(contextPlants)}. Compras pendientes: ${JSON.stringify(contextShopPending)}. Compras hechas: ${JSON.stringify(contextShopBought)}. Agenda: ${JSON.stringify(contextAgenda)}.
-        IMPORTANTE: Tienes acceso a la Agenda del usuario. Si pregunta qué hacer, revisa las notas y fechas de la agenda.
-      `;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: chatHistoryForAPI, systemInstruction: { parts: [{ text: systemInstruction }] } })
-      });
-      const data = await response.json();
-      if (data.candidates && data.candidates[0]) {
-        await guardarMensajeEnBD('model', data.candidates[0].content.parts[0].text);
-      }
-    } catch (error) { console.error("Chat error:", error); } 
-    finally { setIsTyping(false); }
-  };
-
-  return (
-    <div className="flex flex-col h-[calc(100vh-140px)] relative">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-16 pr-2">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${msg.role === 'user' ? 'bg-green-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'}`}>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+      return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-xl animate-scale-up">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg flex items-center gap-2"><Lock className="w-5 h-5 text-gray-500"/> Zona Privada</h3>
+              <button onClick={onClose} className="p-1 bg-gray-100 rounded-full active:bg-gray-200"><X className="w-5 h-5"/></button>
             </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input type="password" placeholder="Ingresa clave (PIN)" value={pin} onChange={e => setPin(e.target.value)} className={`w-full p-3 text-center tracking-widest font-bold text-xl rounded-xl border ${error ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`} autoFocus />
+              {error && <p className="text-red-500 text-xs text-center font-bold">Clave incorrecta.</p>}
+              <button type="submit" className="w-full bg-gray-800 text-white font-bold p-3 rounded-xl active:bg-black">Acceder</button>
+            </form>
           </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm"><span className="animate-pulse text-gray-500 text-sm font-medium">Escribiendo...</span></div>
+        </div>
+      );
+    }
+
+    function AdminPanel({ onClose, db, appId, currentPin, compressImage }) {
+      const [adminTab, setAdminTab] = useState('users');
+      const [users, setUsers] = useState([]);
+      const [newPin, setNewPin] = useState('');
+      const [savingMsg, setSavingMsg] = useState('');
+      const [vaultItems, setVaultItems] = useState([]);
+      const [vaultTitle, setVaultTitle] = useState('');
+      const [vaultContent, setVaultContent] = useState('');
+      const [expandedVaultId, setExpandedVaultId] = useState(null);
+
+      useEffect(() => {
+        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'global_users');
+        const unsubUsers = onSnapshot(usersRef, (snap) => setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() }))), (err) => console.error(err));
+        const vaultRef = collection(db, 'artifacts', appId, 'public', 'data', 'admin_vault');
+        const unsubVault = onSnapshot(vaultRef, (snap) => {
+          const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          items.sort((a, b) => b.createdAt - a.createdAt);
+          setVaultItems(items);
+        }, (err) => console.error(err));
+        return () => { unsubUsers(); unsubVault(); };
+      }, [db, appId]);
+
+      const showMsg = (msg) => { setSavingMsg(msg); setTimeout(() => setSavingMsg(''), 2000); };
+      const handleUpdateName = async (uid, newName) => { try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'global_users', uid), { customAppName: newName }); showMsg('Nombre actualizado!'); } catch (err) { console.error(err); } };
+      const handleIconChange = async (uid, file) => { if (!file) return; const base64 = await compressImage(file); try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'global_users', uid), { customAppIcon: base64 }); showMsg('Ícono actualizado!'); } catch (err) { console.error(err); } };
+      const handleUpdatePin = async () => { if (!newPin || newPin.length < 4) return; try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admin_config', 'settings'), { pin: newPin }); setNewPin(''); showMsg('Clave cambiada!'); } catch (err) { console.error(err); } };
+      const handleAddVaultItem = async () => { if (!vaultTitle.trim() || !vaultContent.trim()) return; try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_vault'), { title: vaultTitle.trim(), content: vaultContent.trim(), createdAt: Date.now() }); setVaultTitle(''); setVaultContent(''); showMsg('¡Guardado en la bóveda!'); } catch (err) { console.error(err); } };
+      const handleDeleteVaultItem = async (id) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admin_vault', id)); } catch (err) { console.error(err); } };
+
+      return (
+        <div className="fixed inset-0 bg-gray-100 z-50 flex flex-col overflow-hidden animate-slide-up">
+          <header className="bg-gray-900 text-white shadow-md flex flex-col">
+            <div className="p-4 flex justify-between items-center"><h2 className="font-bold flex items-center gap-2"><Lock className="w-5 h-5"/> Panel de Administrador</h2><button onClick={onClose} className="p-2 bg-gray-800 rounded-full active:bg-gray-700"><X className="w-5 h-5"/></button></div>
+            <div className="flex bg-gray-800 text-sm font-bold"><button onClick={() => setAdminTab('users')} className={`flex-1 py-3 transition-colors ${adminTab === 'users' ? 'text-white border-b-4 border-green-500' : 'text-gray-400 hover:text-gray-200'}`}>Usuarios</button><button onClick={() => setAdminTab('vault')} className={`flex-1 py-3 transition-colors ${adminTab === 'vault' ? 'text-white border-b-4 border-blue-500' : 'text-gray-400 hover:text-gray-200'}`}>Bóveda (Vault)</button></div>
+          </header>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {savingMsg && <div className="bg-green-500 text-white text-center p-2 rounded-xl font-bold sticky top-0 z-10 shadow-md">{savingMsg}</div>}
+            {adminTab === 'users' && (
+              <>
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200"><h3 className="font-bold text-gray-800 mb-3 text-sm">Cambiar Clave Maestra (PIN)</h3><div className="flex gap-2"><input type="text" placeholder={`Actual: ${currentPin}`} value={newPin} onChange={e => setNewPin(e.target.value)} className="flex-1 p-3 rounded-xl border border-gray-200 outline-none focus:border-gray-500 bg-gray-50 font-bold tracking-wider"/><button onClick={handleUpdatePin} className="bg-gray-800 text-white px-4 rounded-xl font-bold active:bg-black"><Save className="w-5 h-5"/></button></div></div>
+                <div><h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><UserPlus className="w-5 h-5 text-gray-600"/> Usuarios Registrados</h3><div className="space-y-3">{users.map(u => ( <div key={u.uid} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200"><p className="font-bold text-gray-700 text-sm mb-2">Email: <span className="text-blue-600 font-normal">{u.email}</span></p><label className="text-xs font-bold text-gray-500">Ícono y Nombre de la App:</label><div className="flex gap-2 mt-1 items-center"><label className="cursor-pointer shrink-0">{u.customAppIcon ? ( <img src={u.customAppIcon} alt="app-icon" className="w-10 h-10 object-cover rounded-lg border border-gray-200 shadow-sm" /> ) : ( <div className="w-10 h-10 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors"><ImageIcon className="w-5 h-5 text-gray-400" /></div> )}<input type="file" accept="image/png, image/jpeg" className="hidden" onChange={(e) => handleIconChange(u.uid, e.target.files[0])} /></label><input type="text" defaultValue={u.customAppName} onBlur={(e) => { if(e.target.value !== u.customAppName) handleUpdateName(u.uid, e.target.value) }} className="flex-1 p-2 rounded-lg border border-gray-200 outline-none focus:border-green-500 bg-gray-50 text-sm h-10"/><button onClick={(e) => handleUpdateName(u.uid, e.currentTarget.previousElementSibling.value)} className="bg-green-600 text-white px-3 rounded-lg active:bg-green-700 h-10"><Check className="w-4 h-4"/></button></div></div> ))} {users.length === 0 && <p className="text-center text-gray-500 text-sm">No hay usuarios aún.</p>}</div></div>
+              </>
+            )}
+            {adminTab === 'vault' && (
+              <>
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-3"><h3 className="font-bold text-gray-800 flex items-center gap-2"><Database className="w-5 h-5 text-blue-600"/> Nueva Entrada (New Entry)</h3><input type="text" placeholder="Título (Title)" value={vaultTitle} onChange={e => setVaultTitle(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-500 bg-gray-50 font-bold text-sm" /><textarea placeholder="Pega tu texto, código o datos extensos aquí..." value={vaultContent} onChange={e => setVaultContent(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-500 bg-gray-50 h-32 font-mono text-sm resize-y" /><button onClick={handleAddVaultItem} disabled={!vaultTitle || !vaultContent} className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl active:bg-blue-700 disabled:opacity-50 shadow-md">Guardar en Bóveda</button></div>
+                <div className="space-y-3 pb-6"><h3 className="font-bold text-gray-800 ml-1">Documentos Resguardados</h3>{vaultItems.map(item => ( <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"><div className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setExpandedVaultId(expandedVaultId === item.id ? null : item.id)}><h4 className="font-bold text-gray-800 truncate pr-4">{item.title}</h4><div className="flex items-center gap-2 shrink-0"><button onClick={(e) => { e.stopPropagation(); handleDeleteVaultItem(item.id); }} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>{expandedVaultId === item.id ? <ChevronUp className="w-5 h-5 text-gray-500"/> : <ChevronDown className="w-5 h-5 text-gray-500"/>}</div></div>{expandedVaultId === item.id && ( <div className="p-4 border-t border-gray-100 bg-gray-50"><pre className="whitespace-pre-wrap font-mono text-xs text-gray-700 bg-white p-3 rounded-xl border border-gray-200 overflow-x-auto max-h-96 overflow-y-auto">{item.content}</pre></div> )}</div> ))}{vaultItems.length === 0 && <p className="text-center text-gray-400 text-sm mt-4">La bóveda está vacía.</p>}</div>
+              </>
+            )}
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="bg-white rounded-full flex items-center p-1.5 border border-gray-300 shadow-lg absolute bottom-2 left-0 right-0 z-10">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Escribe un mensaje..." className="flex-1 bg-transparent px-4 py-2 outline-none text-sm" />
-        <button onClick={handleSend} disabled={!input.trim() || isTyping} className="bg-green-600 text-white p-2.5 rounded-full mr-1 disabled:opacity-50 active:bg-green-700 transition-colors shadow-sm"><Send className="w-5 h-5" /></button>
-      </div>
-    </div>
-  );
-}
-
-function ShoppingView({ shoppingList, user }) {
-  const [itemName, setItemName] = useState('');
-  const [itemDetails, setItemDetails] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    if (!itemName.trim() || !user) return;
-    setIsAdding(true);
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'shopping'), { name: itemName.trim(), details: itemDetails.trim(), completed: false, createdAt: Date.now() });
-      setItemName(''); setItemDetails('');
-    } catch (err) { console.error(err); } finally { setIsAdding(false); }
-  };
-
-  const toggleItem = async (item) => {
-    try { await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'shopping', item.id), { completed: !item.completed }); } catch (err) { console.error(err); }
-  };
-  const deleteItem = async (id) => {
-    try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'shopping', id)); } catch (err) { console.error(err); }
-  };
-
-  return (
-    <div className="max-w-md mx-auto">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><ShoppingCart className="w-6 h-6 text-green-600" /> Lista de compras</h2>
-      <form onSubmit={handleAdd} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3">
-        <div>
-           <label className="text-xs font-bold text-gray-500 ml-1">Artículo a comprar</label>
-           <input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Ej. Maceta de barro..." className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" required />
         </div>
-        <div>
-           <label className="text-xs font-bold text-gray-500 ml-1">Detalles (Opcional)</label>
-           <div className="flex gap-2 items-center mt-1">
-             <div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center px-3 focus-within:border-green-500">
-               <AlignLeft className="w-4 h-4 text-gray-400 mr-2" />
-               <input type="text" value={itemDetails} onChange={(e) => setItemDetails(e.target.value)} placeholder="Ej. Tamaño grande..." className="w-full py-3 bg-transparent outline-none text-sm" />
-             </div>
-             <button type="submit" disabled={isAdding || !itemName} className="bg-green-600 text-white p-3 rounded-xl shadow-md active:bg-green-700 disabled:opacity-50"><Plus className="w-5 h-5" /></button>
-           </div>
+      );
+    }
+
+    // --- LOGIN SCREEN ---
+    function LoginScreen({ onLogin }) {
+      const [email, setEmail] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const handleSubmit = async (e) => { e.preventDefault(); if (!email.trim()) { setError('Por favor, ingresa un correo válido.'); return; } setError(''); setLoading(true); setTimeout(() => { onLogin(email); setLoading(false); }, 800); };
+
+      return (
+        <div className="min-h-screen bg-green-50 flex flex-col items-center justify-center p-6">
+          <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-green-100 flex flex-col items-center"><div className="bg-green-100 p-4 rounded-full mb-4"><Leaf className="w-12 h-12 text-green-600" /></div><h1 className="text-2xl font-bold text-gray-800 text-center mb-1">El vivero de Toñito</h1><p className="text-sm text-gray-500 mb-8 text-center">Ingresa tu correo para empezar</p>{error && <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4 text-center border border-red-100">{error}</div>}<form onSubmit={handleSubmit} className="w-full space-y-4"><div><label className="text-xs font-bold text-gray-600 ml-1">Correo Electrónico</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 text-center font-medium shadow-inner" placeholder="tu@correo.com" required /></div><button type="submit" disabled={loading || !email} className="w-full bg-green-600 text-white p-3.5 rounded-xl font-bold mt-4 active:bg-green-700 flex justify-center items-center gap-2 disabled:opacity-70 shadow-md">{loading ? 'Cargando...' : <><LogIn className="w-5 h-5"/> Entrar</>}</button></form></div>
         </div>
-      </form>
-      {shoppingList.length === 0 ? (
-        <div className="text-center text-gray-400 mt-10 bg-white p-6 rounded-2xl border border-dashed border-gray-300"><ShoppingCart className="w-10 h-10 mx-auto text-gray-300 mb-2" /><p className="font-medium">Lista vacía.</p><p className="text-xs">Añade sustratos, macetas o herramientas.</p></div>
-      ) : (
-        <ul className="space-y-3">
-          {shoppingList.map(item => (
-            <li key={item.id} className={`flex items-start bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-all ${item.completed ? 'opacity-60 bg-gray-50' : ''}`}>
-              <button onClick={() => toggleItem(item)} className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 shrink-0 transition-colors ${item.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>{item.completed && <Check className="w-4 h-4 text-white" />}</button>
-              <div className="flex-1 min-w-0">
-                <p className={`font-bold text-gray-800 truncate ${item.completed ? 'line-through text-gray-500' : ''}`}>{item.name}</p>
-                {item.details && <p className={`text-xs text-gray-500 mt-1 line-clamp-2 ${item.completed ? 'line-through' : ''}`}>{item.details}</p>}
+      );
+    }
+
+    // --- VIEWS ---
+    function AlbumView({ plants, setSelectedPlant, needsWatering, user, db, appId }) {
+      const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+      const handleDelete = async (plantId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plantId)); setConfirmDeleteId(null); } catch (err) { console.error("Error eliminando:", err); } };
+
+      if (plants.length === 0) {
+        return ( <div className="flex flex-col items-center justify-center h-full text-gray-500 mt-20 text-center"><BookImage className="w-16 h-16 mb-4 text-green-300" /><p className="text-lg">Tu álbum está vacío.</p><p className="text-sm mt-2">Ve a 'Guardar' para añadir tu primera planta.</p></div> );
+      }
+
+      return (
+        <div className="grid grid-cols-2 gap-4">
+          {plants.map(plant => {
+            const isThirsty = needsWatering(plant.lastWatered, plant.wateringDays);
+            const isDeleting = confirmDeleteId === plant.id;
+            return (
+              <div key={plant.id} className="bg-white rounded-xl shadow-sm overflow-hidden relative border border-gray-100 flex flex-col">
+                <button onClick={() => setConfirmDeleteId(isDeleting ? null : plant.id)} className="absolute top-2 left-2 z-10 p-1.5 bg-white/80 backdrop-blur-sm rounded-full text-red-500 shadow-sm active:bg-red-100"><Trash2 className="w-4 h-4" /></button>
+                {isThirsty && !isDeleting && ( <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center shadow-md z-10 animate-pulse"><Droplets className="w-3 h-3 mr-1" /> ¡Agua!</div> )}
+                {isDeleting && ( <div className="absolute inset-0 bg-red-600/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-white p-2 text-center"><p className="font-bold text-sm mb-2">¿Eliminar?</p><div className="flex gap-2 w-full"><button onClick={() => handleDelete(plant.id)} className="flex-1 bg-white text-red-600 text-xs font-bold py-2 rounded-lg active:bg-red-50">Sí</button><button onClick={() => setConfirmDeleteId(null)} className="flex-1 bg-red-800 text-white text-xs font-bold py-2 rounded-lg active:bg-red-900">No</button></div></div> )}
+                <div className="h-32 bg-gray-200 w-full relative">{plant.photos && plant.photos[0] ? ( <img src={plant.photos[0].url} alt={plant.nickname} className="w-full h-full object-cover" /> ) : ( <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Sin foto</div> )}</div>
+                <div className="p-3 flex-1 flex flex-col"><h3 className="font-bold text-gray-800 text-sm truncate">{plant.nickname}</h3><p className="text-[10px] text-gray-500 italic truncate mb-2">{plant.scientificName}</p><button onClick={() => setSelectedPlant(plant)} className="mt-auto w-full bg-green-50 text-green-700 py-1.5 rounded-lg text-xs font-bold flex justify-center items-center gap-1 active:bg-green-100 transition-colors border border-green-200"><Info className="w-3 h-3" /> Info</button></div>
               </div>
-              <button onClick={() => deleteItem(item.id)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg active:bg-red-100 transition-colors shrink-0 ml-2"><Trash2 className="w-5 h-5" /></button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function AddPlantView({ user, plants, compressImage }) {
-  const [mode, setMode] = useState('menu'); 
-  const [newPlant, setNewPlant] = useState({ nickname: '', scientificName: '', care: '', wateringDays: '7', lifeSpan: '', photo: null });
-  const [progressData, setProgressData] = useState({ plantId: '', photo: null, note: '' });
-  const [isSaving, setIsSaving] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const fileInputRef = useRef(null);
-  const fileInputProgressRef = useRef(null);
-
-  const scanPlant = async (base64Image) => {
-    setIsScanning(true);
-    try {
-      const base64Data = base64Image.split(',')[1];
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [
-              { text: "Identifica esta planta. Devuelve SOLO un objeto JSON válido con estas claves: scientificName (string, nombre científico), care (string, instrucciones de cuidado en español), wateringDays (number, días entre riegos), lifeSpan (string, tiempo de vida). Si no sabes, devuelve valores genéricos." },
-              { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-            ] }],
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-      const data = await response.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (textResponse) {
-        const plantInfo = JSON.parse(textResponse);
-        setNewPlant(prev => ({ ...prev, scientificName: plantInfo.scientificName || prev.scientificName, care: plantInfo.care || prev.care, wateringDays: plantInfo.wateringDays ? plantInfo.wateringDays.toString() : prev.wateringDays, lifeSpan: plantInfo.lifeSpan || prev.lifeSpan }));
-      }
-    } catch (err) { console.error("Error scanning:", err); } finally { setIsScanning(false); }
-  };
-
-  const handleNewPlantPhoto = async (e) => { const file = e.target.files?.[0]; if (file) { const base64 = await compressImage(file); setNewPlant(p => ({ ...p, photo: base64 })); scanPlant(base64); } };
-  const handleProgressPhoto = async (e) => { const file = e.target.files?.[0]; if (file) { const base64 = await compressImage(file); setProgressData(p => ({ ...p, photo: base64 })); } };
-
-  const saveNewPlant = async () => {
-    if (!user || !newPlant.nickname) return;
-    setIsSaving(true);
-    try {
-      const plantId = Date.now().toString();
-      await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plantId), { nickname: newPlant.nickname, scientificName: newPlant.scientificName, care: newPlant.care, wateringDays: newPlant.wateringDays, lifeSpan: newPlant.lifeSpan, lastWatered: new Date().toISOString(), photos: newPlant.photo ? [{ url: newPlant.photo, date: new Date().toISOString(), note: 'Añadida' }] : [], createdAt: Date.now() });
-      setMode('menu'); setNewPlant({ nickname: '', scientificName: '', care: '', wateringDays: '7', lifeSpan: '', photo: null });
-    } catch (err) { console.error(err); } finally { setIsSaving(false); }
-  };
-
-  const saveProgress = async () => {
-    if (!user || !progressData.plantId || !progressData.photo) return;
-    setIsSaving(true);
-    try {
-      const plant = plants.find(p => p.id === progressData.plantId);
-      if (plant) {
-        await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plant.id), { photos: [...(plant.photos || []), { url: progressData.photo, date: new Date().toISOString(), note: progressData.note || 'Progreso' }] });
-        setMode('menu'); setProgressData({ plantId: '', photo: null, note: '' });
-      }
-    } catch (err) { console.error(err); } finally { setIsSaving(false); }
-  };
-
-  if (mode === 'menu') {
-    return (
-      <div className="flex flex-col gap-6 items-center justify-center h-[70vh] max-w-sm mx-auto">
-        <h2 className="text-xl font-bold text-gray-800 text-center mb-2">¿Qué deseas guardar?</h2>
-        <button onClick={() => setMode('new')} className="w-full bg-green-600 text-white p-6 rounded-3xl shadow-md flex flex-col items-center justify-center gap-3 active:bg-green-700 transition-transform active:scale-95 border-b-4 border-green-800"><Camera className="w-12 h-12" /><span className="font-bold text-lg">Nueva Planta</span><span className="text-xs text-green-100 text-center">Añadir una planta al álbum</span></button>
-        <button onClick={() => setMode('progress')} className="w-full bg-emerald-500 text-white p-6 rounded-3xl shadow-md flex flex-col items-center justify-center gap-3 active:bg-emerald-600 transition-transform active:scale-95 border-b-4 border-emerald-700"><ImageIcon className="w-12 h-12" /><span className="font-bold text-lg">Progreso</span><span className="text-xs text-emerald-100 text-center">Registrar salud de una planta existente</span></button>
-      </div>
-    );
-  }
-
-  if (mode === 'new') {
-    return (
-      <div className="max-w-md mx-auto space-y-4 pb-10">
-        <div className="flex items-center gap-4 mb-4 border-b border-gray-200 pb-4"><button onClick={() => setMode('menu')} className="p-2 bg-white shadow-sm border border-gray-200 rounded-full active:bg-gray-100"><X className="w-5 h-5"/></button><h2 className="text-xl font-bold text-gray-800">Añadir Planta</h2></div>
-        <div onClick={() => fileInputRef.current?.click()} className="h-48 w-full bg-white border-2 border-dashed border-green-300 rounded-2xl flex flex-col items-center justify-center text-gray-500 overflow-hidden relative cursor-pointer shadow-sm">
-          {newPlant.photo ? ( <> <img src={newPlant.photo} alt="Preview" className={`w-full h-full object-cover transition-opacity ${isScanning ? 'opacity-50' : 'opacity-100'}`} /> {isScanning && ( <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div><span className="font-bold text-sm drop-shadow-md">IA Escaneando...</span></div> )} </> ) : ( <> <div className="bg-green-50 p-3 rounded-full mb-2"><Camera className="w-8 h-8 text-green-600" /></div> <span className="text-sm font-bold text-gray-600 text-center">Abrir cámara o galería<br/><span className="text-xs font-normal">(Camera or Gallery)</span></span> </> )}
-          <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleNewPlantPhoto} />
+            );
+          })}
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Apodo o Nombre</label><input type="text" placeholder="Ej. Helecho de la sala" value={newPlant.nickname} onChange={e => setNewPlant({...newPlant, nickname: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" /></div>
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Nombre Científico (Opcional)</label><input type="text" placeholder="Ej. Nephrolepis exaltata" value={newPlant.scientificName} onChange={e => setNewPlant({...newPlant, scientificName: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1" /></div>
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Instrucciones de cuidado</label><textarea placeholder="Luz indirecta, sustrato húmedo..." value={newPlant.care} onChange={e => setNewPlant({...newPlant, care: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 h-20 mt-1 text-sm" /></div>
-          <div className="flex gap-4 items-center bg-gray-50 p-3 rounded-xl border border-gray-200 mt-1"><label className="text-sm font-bold text-gray-600 flex-1">Frecuencia de riego (días):</label><input type="number" value={newPlant.wateringDays} onChange={e => setNewPlant({...newPlant, wateringDays: e.target.value})} className="w-20 p-2 text-center rounded-xl border border-gray-300 outline-none font-bold text-green-700" min="1" /></div>
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Tiempo de vida estimado</label><input type="text" placeholder="Ej. Perenne, 2 años..." value={newPlant.lifeSpan} onChange={e => setNewPlant({...newPlant, lifeSpan: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1" /></div>
-        </div>
-        <button onClick={saveNewPlant} disabled={!newPlant.nickname || isSaving} className="w-full bg-green-600 text-white p-4 rounded-xl font-bold mt-2 disabled:opacity-50 shadow-md active:bg-green-700">{isSaving ? 'Guardando...' : 'Guardar Planta'}</button>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (mode === 'progress') {
-    return (
-      <div className="max-w-md mx-auto space-y-4">
-        <div className="flex items-center gap-4 mb-4 border-b border-gray-200 pb-4"><button onClick={() => setMode('menu')} className="p-2 bg-white shadow-sm border border-gray-200 rounded-full active:bg-gray-100"><X className="w-5 h-5"/></button><h2 className="text-xl font-bold text-gray-800">Registrar Progreso</h2></div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Selecciona la planta</label><select value={progressData.plantId} onChange={e => setProgressData({...progressData, plantId: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none bg-gray-50 mt-1 font-bold text-gray-700"><option value="">Toca para elegir...</option>{plants.map(p => ( <option key={p.id} value={p.id}>{p.nickname}</option> ))}</select></div>
-          <div onClick={() => fileInputProgressRef.current?.click()} className="h-48 w-full bg-white border-2 border-dashed border-emerald-300 rounded-2xl flex flex-col items-center justify-center text-gray-500 overflow-hidden relative cursor-pointer">{progressData.photo ? ( <img src={progressData.photo} alt="Preview" className="w-full h-full object-cover" /> ) : ( <> <div className="bg-emerald-50 p-3 rounded-full mb-2"><Camera className="w-8 h-8 text-emerald-600" /></div> <span className="text-sm font-bold text-gray-600 text-center">Foto o galería<br/><span className="text-xs font-normal">(Photo or Gallery)</span></span> </> )}<input type="file" accept="image/*" ref={fileInputProgressRef} className="hidden" onChange={handleProgressPhoto} /></div>
-          <div><label className="text-xs font-bold text-gray-500 ml-1">Nota sobre su salud</label><input type="text" placeholder="Ej. Le salieron hojas nuevas..." value={progressData.note} onChange={e => setProgressData({...progressData, note: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-emerald-500 bg-gray-50 mt-1" /></div>
-        </div>
-        <button onClick={saveProgress} disabled={!progressData.plantId || !progressData.photo || isSaving} className="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold mt-2 disabled:opacity-50 shadow-md active:bg-emerald-600">{isSaving ? 'Guardando...' : 'Guardar Progreso'}</button>
-      </div>
-    );
-  }
-}
+    function AgendaView({ agendaItems, user, db, appId }) {
+      const [note, setNote] = useState('');
+      const [date, setDate] = useState('');
+      const [isAdding, setIsAdding] = useState(false);
+      const handleAdd = async (e) => { e.preventDefault(); if (!note.trim() || !date || !user) return; setIsAdding(true); try { await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'agenda'), { note: note.trim(), date: date, createdAt: Date.now() }); setNote(''); setDate(''); } catch (err) { console.error(err); } finally { setIsAdding(false); } };
+      const deleteItem = async (id) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'agenda', id)); } catch (err) { console.error(err); } };
 
-function PlantDetailModal({ plant, onClose, user, db, appId }) {
-  const resetWatering = async () => { try { await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plant.id), { lastWatered: new Date().toISOString() }); } catch (err) { console.error(err); } };
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end backdrop-blur-sm">
-      <div className="bg-stone-100 w-full h-[90vh] rounded-t-3xl overflow-hidden flex flex-col relative">
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-black/30 p-2 rounded-full backdrop-blur-md active:bg-black/50 transition-colors"><X className="w-6 h-6 text-white" /></button>
-        <div className="h-64 relative bg-gray-300 shrink-0">
-          {plant.photos && plant.photos.length > 0 ? ( <img src={plant.photos[plant.photos.length - 1].url} alt={plant.nickname} className="w-full h-full object-cover" /> ) : ( <div className="w-full h-full flex items-center justify-center text-gray-500">Sin imagen</div> )}
-          <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-4 px-5"><h2 className="text-3xl font-extrabold text-white leading-tight">{plant.nickname}</h2><p className="text-green-300 italic text-sm">{plant.scientificName}</p></div>
+      return (
+        <div className="max-w-md mx-auto">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Calendar className="w-6 h-6 text-green-600" /> Agenda</h2>
+          <form onSubmit={handleAdd} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3"><div><label className="text-xs font-bold text-gray-500 ml-1">Fecha</label><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium text-gray-700" required /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Nota o Riego</label><input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ej. Regar el helecho..." className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" required /></div><button type="submit" disabled={isAdding || !note || !date} className="w-full bg-green-600 text-white p-3 rounded-xl shadow-md active:bg-green-700 disabled:opacity-50 font-bold">Añadir</button></form>
+          {agendaItems.length === 0 ? ( <div className="text-center text-gray-400 mt-10 bg-white p-6 rounded-2xl border border-dashed border-gray-300"><Calendar className="w-10 h-10 mx-auto text-gray-300 mb-2" /><p className="font-medium">Agenda vacía.</p><p className="text-xs">Añade recordatorios de riego o notas.</p></div> ) : ( <ul className="space-y-3">{agendaItems.map(item => ( <li key={item.id} className="flex items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="bg-green-100 text-green-800 p-2 rounded-lg text-center min-w-[70px] mr-3"><p className="text-xs font-bold">{new Date(item.date + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}</p></div><div className="flex-1 min-w-0"><p className="font-bold text-gray-800 text-sm">{item.note}</p></div><button onClick={() => deleteItem(item.id)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg active:bg-red-100 transition-colors shrink-0 ml-2"><Trash2 className="w-5 h-5" /></button></li> ))}</ul> )}
         </div>
-        <div className="p-5 overflow-y-auto flex-1 space-y-6">
-          <button onClick={resetWatering} className="w-full bg-blue-500 text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 active:bg-blue-600 shadow-md"><Droplets className="w-5 h-5"/> ¡Regada hoy!</button>
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><Leaf className="w-4 h-4 text-green-500"/> Cuidados</h3><p className="text-gray-600 text-sm leading-relaxed">{plant.care || 'No hay instrucciones de cuidado.'}</p></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center"><Droplets className="w-6 h-6 text-blue-400 mb-1" /><h3 className="font-bold text-gray-800 text-xs mb-1">Riego</h3><p className="text-gray-600 text-sm font-bold">Cada {plant.wateringDays} días</p></div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center"><Leaf className="w-6 h-6 text-green-400 mb-1" /><h3 className="font-bold text-gray-800 text-xs mb-1">Tiempo de vida</h3><p className="text-gray-600 text-sm font-bold truncate w-full">{plant.lifeSpan || 'No definido'}</p></div>
+      );
+    }
+
+    function ChatView({ plants, shoppingList, agendaItems, user }) {
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState('');
+      const [isTyping, setIsTyping] = useState(false);
+      const messagesEndRef = useRef(null);
+      
+      useEffect(() => {
+        if (!user) return;
+        const chatRef = collection(db, 'artifacts', appId, 'users', user.uid, 'chat');
+        const unsubChat = onSnapshot(chatRef, (snapshot) => {
+          const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          msgs.sort((a, b) => a.createdAt - b.createdAt);
+          setMessages(msgs);
+          if (msgs.length === 0) generarSaludoInicial();
+        }, (err) => console.error(err));
+        return () => unsubChat();
+      }, [user]);
+
+      const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      useEffect(() => { scrollToBottom(); }, [messages]);
+
+      const guardarMensajeEnBD = async (role, text) => { try { await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'chat'), { role: role, text: text, createdAt: Date.now() }); } catch (err) { console.error(err); } };
+      const generarSaludoInicial = async () => { const saludo = "¡Hello (Hola)! Soy tu IA experta en plantas. Como eres un usuario nuevo para mí, ¿me podrías decir tu nombre (name) para recordarlo y qué plantitas tienes?"; await guardarMensajeEnBD('model', saludo); };
+
+      const handleSend = async () => {
+        if (!input.trim() || isTyping || !user) return;
+        const userText = input.trim(); setInput(''); setIsTyping(true);
+        await guardarMensajeEnBD('user', userText);
+
+        try {
+          const contextPlants = plants.map(p => ({ apodo: p.nickname, nombre: p.scientificName, riegoCada: p.wateringDays + ' dias' }));
+          const contextShopPending = shoppingList.filter(s => !s.completed).map(s => `${s.name} (Detalles: ${s.details || 'Ninguno'})`);
+          const contextShopBought = shoppingList.filter(s => s.completed).map(s => s.name);
+          const contextAgenda = agendaItems.map(a => `${a.date}: ${a.note}`);
+          
+          const chatHistoryForAPI = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
+          chatHistoryForAPI.push({ role: 'user', parts: [{ text: userText }] });
+
+          const systemInstruction = `Eres el mejor asesor de plantas del mundo. El usuario es Anthony Stocello, organizador de bodas, diseñador gráfico, y ama las plantas. REGLA DE ORO: Respuestas PRECISAS y CORTAS (precise and short). Si no sabes su nombre, pregúntalo. REGLA DE ESTILO: Usa un poco de "Spanglish" (espanglish), utilizando palabras/oraciones en inglés, poniendo su traducción al español entre paréntesis inmediatamente después. Ejemplo: "Necesitas más water (agua)". CONTEXTO DE LA APP: Plantas: ${JSON.stringify(contextPlants)}. Compras pendientes: ${JSON.stringify(contextShopPending)}. Compras hechas: ${JSON.stringify(contextShopBought)}. Agenda: ${JSON.stringify(contextAgenda)}. IMPORTANTE: Tienes acceso a la Agenda del usuario. Si pregunta qué hacer, revisa las notas y fechas de la agenda.`;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: chatHistoryForAPI, systemInstruction: { parts: [{ text: systemInstruction }] } })
+          });
+          const data = await response.json();
+          if (data.candidates && data.candidates[0]) await guardarMensajeEnBD('model', data.candidates[0].content.parts[0].text);
+        } catch (error) { console.error("Chat error:", error); } finally { setIsTyping(false); }
+      };
+
+      return (
+        <div className="flex flex-col h-[calc(100vh-140px)] relative">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-16 pr-2">
+            {messages.map((msg) => ( <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${msg.role === 'user' ? 'bg-green-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'}`}><p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p></div></div> ))}
+            {isTyping && ( <div className="flex justify-start"><div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm"><span className="animate-pulse text-gray-500 text-sm font-medium">Escribiendo...</span></div></div> )}
+            <div ref={messagesEndRef} />
           </div>
-          <div>
-            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-emerald-500"/> Progreso Fotográfico</h3>
-            {plant.photos && plant.photos.length > 0 ? ( <div className="grid grid-cols-3 gap-2">{plant.photos.map((photo, idx) => ( <div key={idx} className="relative group rounded-xl overflow-hidden h-28 border border-gray-200 shadow-sm"><img src={photo.url} alt="Progreso" className="w-full h-full object-cover" /><div className="absolute bottom-0 w-full bg-black/60 text-[10px] text-white p-1.5 text-center truncate font-medium backdrop-blur-sm">{photo.note}</div></div> ))}</div> ) : ( <p className="text-sm text-gray-500 italic">Aún no hay fotos de progreso.</p> )}
-          </div>
+          <div className="bg-white rounded-full flex items-center p-1.5 border border-gray-300 shadow-lg absolute bottom-2 left-0 right-0 z-10"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Escribe un mensaje..." className="flex-1 bg-transparent px-4 py-2 outline-none text-sm" /><button onClick={handleSend} disabled={!input.trim() || isTyping} className="bg-green-600 text-white p-2.5 rounded-full mr-1 disabled:opacity-50 active:bg-green-700 transition-colors shadow-sm"><Send className="w-5 h-5" /></button></div>
         </div>
-      </div>
-    </div>
-  );
-}
+      );
+    }
 
-function NavButton({ icon, label, isActive, onClick }) {
-  return (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center w-full py-2 ${isActive ? 'text-green-700 font-bold' : 'text-gray-400 font-medium'}`}>
-      <div className={`mb-1 transition-all duration-200 ${isActive ? 'scale-110 drop-shadow-md' : ''}`}>{icon}</div><span className="text-[10px]">{label}</span>
-    </button>
-  );
-}
+    function ShoppingView({ shoppingList, user }) {
+      const [itemName, setItemName] = useState(''); const [itemDetails, setItemDetails] = useState(''); const [isAdding, setIsAdding] = useState(false);
+      const handleAdd = async (e) => { e.preventDefault(); if (!itemName.trim() || !user) return; setIsAdding(true); try { await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'shopping'), { name: itemName.trim(), details: itemDetails.trim(), completed: false, createdAt: Date.now() }); setItemName(''); setItemDetails(''); } catch (err) { console.error(err); } finally { setIsAdding(false); } };
+      const toggleItem = async (item) => { try { await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'shopping', item.id), { completed: !item.completed }); } catch (err) { console.error(err); } };
+      const deleteItem = async (id) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'shopping', id)); } catch (err) { console.error(err); } };
+
+      return (
+        <div className="max-w-md mx-auto">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><ShoppingCart className="w-6 h-6 text-green-600" /> Lista de compras</h2>
+          <form onSubmit={handleAdd} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3"><div><label className="text-xs font-bold text-gray-500 ml-1">Artículo a comprar</label><input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Ej. Maceta de barro..." className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" required /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Detalles (Opcional)</label><div className="flex gap-2 items-center mt-1"><div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center px-3 focus-within:border-green-500"><AlignLeft className="w-4 h-4 text-gray-400 mr-2" /><input type="text" value={itemDetails} onChange={(e) => setItemDetails(e.target.value)} placeholder="Ej. Tamaño grande..." className="w-full py-3 bg-transparent outline-none text-sm" /></div><button type="submit" disabled={isAdding || !itemName} className="bg-green-600 text-white p-3 rounded-xl shadow-md active:bg-green-700 disabled:opacity-50"><Plus className="w-5 h-5" /></button></div></div></form>
+          {shoppingList.length === 0 ? ( <div className="text-center text-gray-400 mt-10 bg-white p-6 rounded-2xl border border-dashed border-gray-300"><ShoppingCart className="w-10 h-10 mx-auto text-gray-300 mb-2" /><p className="font-medium">Lista vacía.</p><p className="text-xs">Añade sustratos, macetas o herramientas.</p></div> ) : ( <ul className="space-y-3">{shoppingList.map(item => ( <li key={item.id} className={`flex items-start bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-all ${item.completed ? 'opacity-60 bg-gray-50' : ''}`}><button onClick={() => toggleItem(item)} className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 shrink-0 transition-colors ${item.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>{item.completed && <Check className="w-4 h-4 text-white" />}</button><div className="flex-1 min-w-0"><p className={`font-bold text-gray-800 truncate ${item.completed ? 'line-through text-gray-500' : ''}`}>{item.name}</p>{item.details && <p className={`text-xs text-gray-500 mt-1 line-clamp-2 ${item.completed ? 'line-through' : ''}`}>{item.details}</p>}</div><button onClick={() => deleteItem(item.id)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg active:bg-red-100 transition-colors shrink-0 ml-2"><Trash2 className="w-5 h-5" /></button></li> ))}</ul> )}
+        </div>
+      );
+    }
+
+    function AddPlantView({ user, plants, compressImage }) {
+      const [mode, setMode] = useState('menu'); 
+      const [newPlant, setNewPlant] = useState({ nickname: '', scientificName: '', care: '', wateringDays: '7', lifeSpan: '', photo: null });
+      const [progressData, setProgressData] = useState({ plantId: '', photo: null, note: '' });
+      const [isSaving, setIsSaving] = useState(false); const [isScanning, setIsScanning] = useState(false);
+      const fileInputRef = useRef(null); const fileInputProgressRef = useRef(null);
+
+      const scanPlant = async (base64Image) => {
+        setIsScanning(true);
+        try {
+          const base64Data = base64Image.split(',')[1];
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: "user", parts: [ { text: "Identifica esta planta. Devuelve SOLO un objeto JSON válido con estas claves: scientificName (string, nombre científico), care (string, instrucciones de cuidado en español), wateringDays (number, días entre riegos), lifeSpan (string, tiempo de vida). Si no sabes, devuelve valores genéricos." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } } ] }], generationConfig: { responseMimeType: "application/json" } }) });
+          const data = await response.json(); const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (textResponse) { const plantInfo = JSON.parse(textResponse); setNewPlant(prev => ({ ...prev, scientificName: plantInfo.scientificName || prev.scientificName, care: plantInfo.care || prev.care, wateringDays: plantInfo.wateringDays ? plantInfo.wateringDays.toString() : prev.wateringDays, lifeSpan: plantInfo.lifeSpan || prev.lifeSpan })); }
+        } catch (err) { console.error("Error scanning:", err); } finally { setIsScanning(false); }
+      };
+
+      const handleNewPlantPhoto = async (e) => { const file = e.target.files?.[0]; if (file) { const base64 = await compressImage(file); setNewPlant(p => ({ ...p, photo: base64 })); scanPlant(base64); } };
+      const handleProgressPhoto = async (e) => { const file = e.target.files?.[0]; if (file) { const base64 = await compressImage(file); setProgressData(p => ({ ...p, photo: base64 })); } };
+
+      const saveNewPlant = async () => { if (!user || !newPlant.nickname) return; setIsSaving(true); try { const plantId = Date.now().toString(); await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plantId), { nickname: newPlant.nickname, scientificName: newPlant.scientificName, care: newPlant.care, wateringDays: newPlant.wateringDays, lifeSpan: newPlant.lifeSpan, lastWatered: new Date().toISOString(), photos: newPlant.photo ? [{ url: newPlant.photo, date: new Date().toISOString(), note: 'Añadida' }] : [], createdAt: Date.now() }); setMode('menu'); setNewPlant({ nickname: '', scientificName: '', care: '', wateringDays: '7', lifeSpan: '', photo: null }); } catch (err) { console.error(err); } finally { setIsSaving(false); } };
+      const saveProgress = async () => { if (!user || !progressData.plantId || !progressData.photo) return; setIsSaving(true); try { const plant = plants.find(p => p.id === progressData.plantId); if (plant) { await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plant.id), { photos: [...(plant.photos || []), { url: progressData.photo, date: new Date().toISOString(), note: progressData.note || 'Progreso' }] }); setMode('menu'); setProgressData({ plantId: '', photo: null, note: '' }); } } catch (err) { console.error(err); } finally { setIsSaving(false); } };
+
+      if (mode === 'menu') return ( <div className="flex flex-col gap-6 items-center justify-center h-[70vh] max-w-sm mx-auto"><h2 className="text-xl font-bold text-gray-800 text-center mb-2">¿Qué deseas guardar?</h2><button onClick={() => setMode('new')} className="w-full bg-green-600 text-white p-6 rounded-3xl shadow-md flex flex-col items-center justify-center gap-3 active:bg-green-700 transition-transform active:scale-95 border-b-4 border-green-800"><Camera className="w-12 h-12" /><span className="font-bold text-lg">Nueva Planta</span><span className="text-xs text-green-100 text-center">Añadir una planta al álbum</span></button><button onClick={() => setMode('progress')} className="w-full bg-emerald-500 text-white p-6 rounded-3xl shadow-md flex flex-col items-center justify-center gap-3 active:bg-emerald-600 transition-transform active:scale-95 border-b-4 border-emerald-700"><ImageIcon className="w-12 h-12" /><span className="font-bold text-lg">Progreso</span><span className="text-xs text-emerald-100 text-center">Registrar salud de una planta existente</span></button></div> );
+      if (mode === 'new') return ( <div className="max-w-md mx-auto space-y-4 pb-10"><div className="flex items-center gap-4 mb-4 border-b border-gray-200 pb-4"><button onClick={() => setMode('menu')} className="p-2 bg-white shadow-sm border border-gray-200 rounded-full active:bg-gray-100"><X className="w-5 h-5"/></button><h2 className="text-xl font-bold text-gray-800">Añadir Planta</h2></div><div onClick={() => fileInputRef.current?.click()} className="h-48 w-full bg-white border-2 border-dashed border-green-300 rounded-2xl flex flex-col items-center justify-center text-gray-500 overflow-hidden relative cursor-pointer shadow-sm">{newPlant.photo ? ( <> <img src={newPlant.photo} alt="Preview" className={`w-full h-full object-cover transition-opacity ${isScanning ? 'opacity-50' : 'opacity-100'}`} /> {isScanning && ( <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div><span className="font-bold text-sm drop-shadow-md">IA Escaneando...</span></div> )} </> ) : ( <> <div className="bg-green-50 p-3 rounded-full mb-2"><Camera className="w-8 h-8 text-green-600" /></div> <span className="text-sm font-bold text-gray-600 text-center">Abrir cámara o galería<br/><span className="text-xs font-normal">(Camera or Gallery)</span></span> </> )}<input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleNewPlantPhoto} /></div><div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3"><div><label className="text-xs font-bold text-gray-500 ml-1">Apodo o Nombre</label><input type="text" placeholder="Ej. Helecho de la sala" value={newPlant.nickname} onChange={e => setNewPlant({...newPlant, nickname: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1 font-medium" /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Nombre Científico (Opcional)</label><input type="text" placeholder="Ej. Nephrolepis exaltata" value={newPlant.scientificName} onChange={e => setNewPlant({...newPlant, scientificName: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1" /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Instrucciones de cuidado</label><textarea placeholder="Luz indirecta, sustrato húmedo..." value={newPlant.care} onChange={e => setNewPlant({...newPlant, care: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 h-20 mt-1 text-sm" /></div><div className="flex gap-4 items-center bg-gray-50 p-3 rounded-xl border border-gray-200 mt-1"><label className="text-sm font-bold text-gray-600 flex-1">Frecuencia de riego (días):</label><input type="number" value={newPlant.wateringDays} onChange={e => setNewPlant({...newPlant, wateringDays: e.target.value})} className="w-20 p-2 text-center rounded-xl border border-gray-300 outline-none font-bold text-green-700" min="1" /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Tiempo de vida estimado</label><input type="text" placeholder="Ej. Perenne, 2 años..." value={newPlant.lifeSpan} onChange={e => setNewPlant({...newPlant, lifeSpan: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 bg-gray-50 mt-1" /></div></div><button onClick={saveNewPlant} disabled={!newPlant.nickname || isSaving} className="w-full bg-green-600 text-white p-4 rounded-xl font-bold mt-2 disabled:opacity-50 shadow-md active:bg-green-700">{isSaving ? 'Guardando...' : 'Guardar Planta'}</button></div> );
+      if (mode === 'progress') return ( <div className="max-w-md mx-auto space-y-4"><div className="flex items-center gap-4 mb-4 border-b border-gray-200 pb-4"><button onClick={() => setMode('menu')} className="p-2 bg-white shadow-sm border border-gray-200 rounded-full active:bg-gray-100"><X className="w-5 h-5"/></button><h2 className="text-xl font-bold text-gray-800">Registrar Progreso</h2></div><div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-4"><div><label className="text-xs font-bold text-gray-500 ml-1">Selecciona la planta</label><select value={progressData.plantId} onChange={e => setProgressData({...progressData, plantId: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none bg-gray-50 mt-1 font-bold text-gray-700"><option value="">Toca para elegir...</option>{plants.map(p => ( <option key={p.id} value={p.id}>{p.nickname}</option> ))}</select></div><div onClick={() => fileInputProgressRef.current?.click()} className="h-48 w-full bg-white border-2 border-dashed border-emerald-300 rounded-2xl flex flex-col items-center justify-center text-gray-500 overflow-hidden relative cursor-pointer">{progressData.photo ? ( <img src={progressData.photo} alt="Preview" className="w-full h-full object-cover" /> ) : ( <> <div className="bg-emerald-50 p-3 rounded-full mb-2"><Camera className="w-8 h-8 text-emerald-600" /></div> <span className="text-sm font-bold text-gray-600 text-center">Foto o galería<br/><span className="text-xs font-normal">(Photo or Gallery)</span></span> </> )}<input type="file" accept="image/*" ref={fileInputProgressRef} className="hidden" onChange={handleProgressPhoto} /></div><div><label className="text-xs font-bold text-gray-500 ml-1">Nota sobre su salud</label><input type="text" placeholder="Ej. Le salieron hojas nuevas..." value={progressData.note} onChange={e => setProgressData({...progressData, note: e.target.value})} className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-emerald-500 bg-gray-50 mt-1" /></div></div><button onClick={saveProgress} disabled={!progressData.plantId || !progressData.photo || isSaving} className="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold mt-2 disabled:opacity-50 shadow-md active:bg-emerald-600">{isSaving ? 'Guardando...' : 'Guardar Progreso'}</button></div> );
+    }
+
+    function PlantDetailModal({ plant, onClose, user, db, appId }) {
+      const resetWatering = async () => { try { await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'plants', plant.id), { lastWatered: new Date().toISOString() }); } catch (err) { console.error(err); } };
+      return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end backdrop-blur-sm">
+          <div className="bg-stone-100 w-full h-[90vh] rounded-t-3xl overflow-hidden flex flex-col relative"><button onClick={onClose} className="absolute top-4 right-4 z-10 bg-black/30 p-2 rounded-full backdrop-blur-md active:bg-black/50 transition-colors"><X className="w-6 h-6 text-white" /></button><div className="h-64 relative bg-gray-300 shrink-0">{plant.photos && plant.photos.length > 0 ? ( <img src={plant.photos[plant.photos.length - 1].url} alt={plant.nickname} className="w-full h-full object-cover" /> ) : ( <div className="w-full h-full flex items-center justify-center text-gray-500">Sin imagen</div> )}<div className="absolute bottom-0 w-full bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-4 px-5"><h2 className="text-3xl font-extrabold text-white leading-tight">{plant.nickname}</h2><p className="text-green-300 italic text-sm">{plant.scientificName}</p></div></div><div className="p-5 overflow-y-auto flex-1 space-y-6"><button onClick={resetWatering} className="w-full bg-blue-500 text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 active:bg-blue-600 shadow-md"><Droplets className="w-5 h-5"/> ¡Regada hoy!</button><div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><Leaf className="w-4 h-4 text-green-500"/> Cuidados</h3><p className="text-gray-600 text-sm leading-relaxed">{plant.care || 'No hay instrucciones de cuidado.'}</p></div><div className="grid grid-cols-2 gap-4"><div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center"><Droplets className="w-6 h-6 text-blue-400 mb-1" /><h3 className="font-bold text-gray-800 text-xs mb-1">Riego</h3><p className="text-gray-600 text-sm font-bold">Cada {plant.wateringDays} días</p></div><div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center"><Leaf className="w-6 h-6 text-green-400 mb-1" /><h3 className="font-bold text-gray-800 text-xs mb-1">Tiempo de vida</h3><p className="text-gray-600 text-sm font-bold truncate w-full">{plant.lifeSpan || 'No definido'}</p></div></div><div><h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-emerald-500"/> Progreso Fotográfico</h3>{plant.photos && plant.photos.length > 0 ? ( <div className="grid grid-cols-3 gap-2">{plant.photos.map((photo, idx) => ( <div key={idx} className="relative group rounded-xl overflow-hidden h-28 border border-gray-200 shadow-sm"><img src={photo.url} alt="Progreso" className="w-full h-full object-cover" /><div className="absolute bottom-0 w-full bg-black/60 text-[10px] text-white p-1.5 text-center truncate font-medium backdrop-blur-sm">{photo.note}</div></div> ))}</div> ) : ( <p className="text-sm text-gray-500 italic">Aún no hay fotos de progreso.</p> )}</div></div></div>
+        </div>
+      );
+    }
+
+    function NavButton({ icon, label, isActive, onClick }) {
+      return (
+        <button onClick={onClick} className={`flex flex-col items-center justify-center w-full py-2 ${isActive ? 'text-green-700 font-bold' : 'text-gray-400 font-medium'}`}><div className={`mb-1 transition-all duration-200 ${isActive ? 'scale-110 drop-shadow-md' : ''}`}>{icon}</div><span className="text-[10px]">{label}</span></button>
+      );
+    }
+
+    // --- RENDERIZADO INICIAL ---
+    const root = createRoot(document.getElementById('root'));
+    root.render(<ViveroApp />);
+  </script>
+</body>
+</html>
